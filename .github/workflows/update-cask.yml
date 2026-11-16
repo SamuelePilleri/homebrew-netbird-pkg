@@ -1,0 +1,23 @@
+name: update-cask
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-cask
+  cancel-in-progress: false
+
+jobs:
+  update-cask:
+    # macOS runner so the update script can verify signatures and notarization
+    # with Apple's own tools before a version is published (free for public repos).
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/update-cask.sh
