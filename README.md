@@ -3,17 +3,16 @@
 [![update-cask](https://github.com/SamuelePilleri/homebrew-netbird-pkg/actions/workflows/update-cask.yml/badge.svg)](https://github.com/SamuelePilleri/homebrew-netbird-pkg/actions/workflows/update-cask.yml)
 
 A Homebrew cask wrapping NetBird's official, Apple-signed and notarized macOS
-`.pkg` installer - the same package Munki/MDM deploys - with a scheduled
-workflow that keeps it current.
+`.pkg` installer - the same package [Munki](https://github.com/munki/munki)/MDM
+deploys - with a scheduled workflow that keeps it current.
 
 ## Install
 
 ```console
-$ brew tap SamuelePilleri/netbird-pkg
-$ brew install --cask --adopt netbird-pkg
+$ brew install --cask --adopt SamuelePilleri/netbird-pkg/netbird-pkg
 ```
 
-The same two commands whether NetBird is already installed (Munki, NetBird's
+The same command whether NetBird is already installed (Munki, NetBird's
 in-app updater, manual download) or not. On an existing install, `--adopt`
 registers it with Homebrew; for pkg casks Apple's installer still runs once -
 an idempotent in-place reinstall at the same version. After that:

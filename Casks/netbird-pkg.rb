@@ -34,7 +34,6 @@ cask "netbird-pkg" do
 
   caveats <<~EOS
     Official Apple-signed, notarized installer; preserves the io.netbird.client
-    receipt used by Munki/MDM. Adopt existing installs with:
-      brew install --adopt --cask netbird-pkg
+    receipt used by Munki/MDM.
   EOS
 end
