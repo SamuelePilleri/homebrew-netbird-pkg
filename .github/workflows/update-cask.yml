@@ -13,11 +13,32 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      update: ${{ steps.check.outputs.update }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        run: |
+          latest="$(curl -fsSL --retry 3 https://pkgs.netbird.io/releases/latest | tr -d '[:space:]' | grep -oE '"tag_name":"v[0-9.]+"' | head -n1 | grep -oE '[0-9]+\.[0-9.]+')"
+          current="$(sed -nE 's/.*version "([^"]+)".*/\1/p' Casks/netbird-pkg.rb | head -n1)"
+          echo "upstream=${latest:-?} cask=${current:-?}"
+          [ -n "$latest" ] || { echo "ERROR: could not resolve upstream version" >&2; exit 1; }
+          if [ "$latest" = "$current" ]; then
+            echo "update=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "update=true" >> "$GITHUB_OUTPUT"
+          fi
+
   update-cask:
-    # macOS runner so the update script can verify signatures and notarization
-    # with Apple's own tools before a version is published (free for public repos).
+    needs: check
+    if: needs.check.outputs.update == 'true'
+    # macOS runner: verifies signatures/notarization with Apple's own tools.
+    # Only spawned when there is an actual release (queue-prone, so rare).
     runs-on: macos-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - run: bash scripts/update-cask.sh
