@@ -1,66 +1,27 @@
-# homebrew-netbird-pkg
+# homebrew-tap
 
-[![update-cask](https://github.com/SamuelePilleri/homebrew-netbird-pkg/actions/workflows/update-cask.yml/badge.svg)](https://github.com/SamuelePilleri/homebrew-netbird-pkg/actions/workflows/update-cask.yml)
+[![update-casks](https://github.com/SamuelePilleri/homebrew-tap/actions/workflows/update-casks.yml/badge.svg)](https://github.com/SamuelePilleri/homebrew-tap/actions/workflows/update-casks.yml)
 
-A Homebrew cask wrapping NetBird's official, Apple-signed and notarized macOS
-`.pkg` installer - the same package [Munki](https://github.com/munki/munki)/MDM
-deploys - with a scheduled workflow that keeps it current.
+Casks for apps that have no usable Homebrew option, kept current by a
+scheduled workflow.
 
-## Install
+| Cask | Source | Signed | Notarized | Gatekeeper | Notes |
+|---|---|---|---|---|---|
+| `netbird-pkg` | [NetBird](https://netbird.io) official `.pkg` (GitHub) | NetBird GmbH (`TA739QLA7A`), receipt `io.netbird.client` | ✅ | ✅ | NetBird's `netbirdio/tap` cask+formula install a zip + CLI and rebuild the daemon with `netbird service install`; no `io.netbird.client` receipt is created, so an MDM-managed install cannot be adopted. This wraps the official `.pkg`, receipt included. |
+| `quickdrop` | [QuickDrop](https://github.com/leonboe1/QuickDrop) `.app.zip` (GitHub) | Leon Boettger (`92SDAWLN76`), bundle `com.leonboettger.neardrop` | ✅ | ✅ | No cask or formula upstream. Sandboxed app; do not install alongside the Mac App Store build, which uses the same bundle id. |
 
-```console
-$ brew install --cask --adopt SamuelePilleri/netbird-pkg/netbird-pkg
-```
-
-The same command whether NetBird is already installed (Munki, NetBird's
-in-app updater, manual download) or not. On an existing install, `--adopt`
-registers it with Homebrew; for pkg casks Apple's installer still runs once -
-an idempotent in-place reinstall at the same version. After that:
-
-```console
-$ brew update && brew upgrade
-```
+Fully-qualified names trust just that cask (Homebrew 6+ requires third-party
+taps to be trusted) and tap the repo automatically; `--adopt` registers an
+existing copy instead of refusing to install over it. Then
+`brew update && brew upgrade`.
 
 ## Updates
 
-A GitHub Actions workflow on a **macOS runner** checks NetBird's release feed
-every six hours. On a new release it downloads both installers and, before
-committing the new version and checksums to this tap, verifies that each one
-is:
+A workflow checks every source every six hours on Linux. A version change
+spawns a macOS runner, which downloads the release, runs every check in the
+table above, and commits the new version and sha256. If a check fails the run
+goes red and the cask stays on the last verified release.
 
-- signed for distribution by `Developer ID Installer: NetBird GmbH
-  (TA739QLA7A)`, notarized, and accepted by Gatekeeper (`pkgutil`, `spctl`);
-- the expected package - receipt `io.netbird.client` at the expected version;
-- byte-identical to what `pkgs.netbird.io/macos/<arch>` serves.
-
-The cask pins the GitHub release permalink because `pkgs.netbird.io` is only
-a redirector to exactly these assets (its signed URLs expire within the
-hour); older releases persist at the permalinks. On every install Homebrew
-verifies the pinned sha256 and Apple's `installer` validates the signature
-chain. If a check ever fails, the workflow goes red and the tap stays on the
-last verified release.
-
-## Munki
-
-Installing or upgrading through this cask is indistinguishable from Munki
-doing it - same package, same installer, same receipt. Being ahead of your
-catalog is fine; Munki treats a newer installed version as installed. Check
-both views with:
-
-```console
-$ pkgutil --pkg-info io.netbird.client      # what Munki reads
-$ brew list --cask --versions netbird-pkg   # what Homebrew tracks
-```
-
-## Uninstall
-
-```console
-$ brew uninstall --cask netbird-pkg   # removes the receipt; Munki may reinstall
-$ brew zap --cask netbird-pkg         # also removes user state and logs
-```
-
-Site configuration under `/var/lib/netbird` is never touched.
-
-## License
-
-MIT - see [LICENSE](LICENSE).
+At install time Homebrew verifies the pinned sha256; for `.pkg` casks Apple's
+`installer` validates the signature, and for `.app` casks Gatekeeper does so on
+first launch. Nothing unverified reaches your Mac.

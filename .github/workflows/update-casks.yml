@@ -1,0 +1,57 @@
+name: update-casks
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# One group for all casks: concurrent bumps would race on git push.
+concurrency:
+  group: update-casks
+  cancel-in-progress: false
+
+jobs:
+  check_netbird_pkg:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      update: ${{ steps.check.outputs.update }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/check.sh netbird-pkg
+
+  check_quickdrop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      update: ${{ steps.check.outputs.update }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/check.sh quickdrop
+
+  update:
+    needs: [check_netbird_pkg, check_quickdrop]
+    if: >-
+      needs.check_netbird_pkg.outputs.update == 'true' ||
+      needs.check_quickdrop.outputs.update == 'true'
+    # macOS runner: verifies signatures/notarization with Apple's own tools.
+    # Only spawned when there is an actual release (queue-prone, so rare), and
+    # only once per run even if both casks are outdated.
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - if: needs.check_netbird_pkg.outputs.update == 'true'
+        run: bash scripts/update.sh netbird-pkg
+      # always(): a failed NetBird bump must not block an unrelated QuickDrop bump.
+      - if: always() && needs.check_quickdrop.outputs.update == 'true'
+        run: bash scripts/update.sh quickdrop
