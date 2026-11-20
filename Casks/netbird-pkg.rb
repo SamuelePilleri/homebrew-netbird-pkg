@@ -1,9 +1,9 @@
 cask "netbird-pkg" do
   arch arm: "arm64", intel: "amd64"
 
-  version "0.83.1"
-  sha256 arm:   "a96e402ba31ff4804a88ad04fac2e3f9e695f0e80440f39a68c2cb3f661a0d2a",
-         intel: "ed27bd225a15a9d62a682ffdaa2093e4ba72126d335fecf65b972d7b3db44e92"
+  version "0.83.2"
+  sha256 arm:   "6e98d0dc338f5d6635f8803c1afaa765b12000b30f7e9ec04d0ab8d103570020",
+         intel: "3eae9982cc169854ce55aaed175a28980666fc922874b602be39878916891a8e"
 
   # pkgs.netbird.io/macos/#{arch} only 302-redirects (with ~1h expiring signed
   # URLs) to this exact GitHub-hosted release asset, so the permalink below is
